@@ -1,0 +1,76 @@
+# Copyright (C) The DDC development team, see COPYRIGHT.md file
+#
+# SPDX-License-Identifier: MIT
+
+name: Tests on macOS
+
+on:
+  workflow_call:
+
+jobs:
+  test-macos:
+    runs-on: macos-latest
+    env:
+      Kokkos_ROOT: ${{github.workspace}}/opt/kokkos
+      PDI_ROOT: ${{github.workspace}}/opt/pdi
+      CMAKE_PREFIX_PATH: ${{github.workspace}}/opt/pdi
+      CMAKE_BUILD_PARALLEL_LEVEL: 4
+      CC: clang
+      CXX: clang++
+      CMAKE_BUILD_TYPE: Release
+    steps:
+    - name: Checkout built branch
+      uses: actions/checkout@v4
+      with: { submodules: true }
+    - run: git config --global --add safe.directory '*'
+    - name: Install PDI+user code plugin and dependencies
+      run: |
+        git clone --branch 1.8.1 --depth 1 https://github.com/pdidev/pdi.git
+        # PATCH: remove <link.h> for macOS
+        sed -i.bak 's|#include <link.h>||g' pdi/plugins/user_code/user_code.cxx
+        rm -f pdi/plugins/user_code/user_code.cxx.bak
+        cmake \
+          -DBUILD_BENCHMARKING=OFF \
+          -DBUILD_DECL_HDF5_PLUGIN=OFF \
+          -DBUILD_DECL_NETCDF_PLUGIN=OFF \
+          -DBUILD_DEISA_PLUGIN=OFF \
+          -DBUILD_DOCUMENTATION=OFF \
+          -DBUILD_FORTRAN=OFF \
+          -DBUILD_MPI_PLUGIN=OFF \
+          -DBUILD_PYCALL_PLUGIN=OFF \
+          -DBUILD_SERIALIZE_PLUGIN=OFF \
+          -DBUILD_SET_VALUE_PLUGIN=OFF \
+          -DBUILD_TESTING=OFF \
+          -DBUILD_TRACE_PLUGIN=OFF \
+          -DBUILD_USER_CODE_PLUGIN=ON \
+          -DCMAKE_CXX_FLAGS="-Wno-unqualified-std-cast-call" \
+          -DCMAKE_CXX_STANDARD=17 \
+          -B build-pdi \
+          -S pdi
+        cmake --build build-pdi
+        cmake --install build-pdi --prefix $PDI_ROOT
+    - name: Install Kokkos
+      run: |
+        git clone --branch 4.5.01 --depth 1 https://github.com/kokkos/kokkos.git
+        cmake \
+          -DCMAKE_CXX_STANDARD=17 \
+          -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
+          -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
+          -DKokkos_ENABLE_SERIAL=ON \
+          -B build-kokkos \
+          -S kokkos
+        cmake --build build-kokkos
+        cmake --install build-kokkos --prefix $Kokkos_ROOT
+    - name: Build test
+      run: |
+        cmake -B build
+        cmake --build buildd
+        cmake --install build --prefix test
+    - name: Inspect binaries
+      run: |
+        otool -l ./build/main
+        otool -l ./test/bin/main
+    - name: Run test
+      run: |
+        ./build/main
+        ./test/bin/main
