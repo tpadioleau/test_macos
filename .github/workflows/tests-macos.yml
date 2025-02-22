@@ -64,7 +64,7 @@ jobs:
     - name: Build test
       run: |
         cmake -B build
-        cmake --build buildd
+        cmake --build build
         cmake --install build --prefix test
     - name: Inspect binaries
       run: |
