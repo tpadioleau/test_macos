@@ -11,9 +11,9 @@ jobs:
   test-macos:
     runs-on: macos-latest
     env:
-      Kokkos_ROOT: ${{github.workspace}}/opt/kokkos
-      PDI_ROOT: ${{github.workspace}}/opt/pdi
-      CMAKE_PREFIX_PATH: ${{github.workspace}}/opt/pdi
+      Kokkos_ROOT: ${{github.workspace}}/my_opt/kokkos
+      PDI_ROOT: ${{github.workspace}}/my_opt/pdi
+      CMAKE_PREFIX_PATH: ${{github.workspace}}/my_opt/pdi
       CMAKE_BUILD_PARALLEL_LEVEL: 4
       CC: clang
       CXX: clang++
