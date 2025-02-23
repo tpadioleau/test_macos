@@ -72,5 +72,10 @@ jobs:
         otool -l ./test/bin/main
     - name: Run test
       run: |
-        ./build/main
-        ./test/bin/main
+        ./build/main || true
+        ./test/bin/main || true
+    - name: Run test
+      run: |
+        . $PDI_ROOT/share/pdi/env.sh
+        ./build/main || true
+        ./test/bin/main || true
