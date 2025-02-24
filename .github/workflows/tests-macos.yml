@@ -22,9 +22,9 @@ jobs:
     - name: Checkout built branch
       uses: actions/checkout@v4
       with: { submodules: true }
-    - run: git config --global --add safe.directory '*'
     - name: Install PDI+user code plugin and dependencies
       run: |
+        git config --global --add safe.directory '*'
         git clone --branch mac_path --depth 1 https://github.com/pdidev/pdi.git
         # PATCH: remove <link.h> for macOS
         sed -i.bak 's|#include <link.h>||g' pdi/plugins/user_code/user_code.cxx
@@ -49,8 +49,6 @@ jobs:
           -S pdi
         cmake --build build-pdi
         cmake --install build-pdi --prefix $PDI_ROOT
-    - name: Install Kokkos
-      run: |
         git clone --branch 4.5.01 --depth 1 https://github.com/kokkos/kokkos.git
         cmake \
           -DCMAKE_CXX_STANDARD=17 \
@@ -61,8 +59,6 @@ jobs:
           -S kokkos
         cmake --build build-kokkos
         cmake --install build-kokkos --prefix $Kokkos_ROOT
-    - name: Build test
-      run: |
         cmake -B build
         cmake --build build
         cmake --install build --prefix test
@@ -72,10 +68,10 @@ jobs:
         otool -l ./test/bin/main
     - name: Run test
       run: |
+        echo "Before sourcing env.sh"
         ./build/main || true
         ./test/bin/main || true
-    - name: Run test
-      run: |
         . $PDI_ROOT/share/pdi/env.sh
+        echo "After sourcing env.sh"
         ./build/main || true
         ./test/bin/main || true
