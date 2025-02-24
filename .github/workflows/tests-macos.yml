@@ -41,7 +41,7 @@ jobs:
           -DBUILD_SERIALIZE_PLUGIN=OFF \
           -DBUILD_SET_VALUE_PLUGIN=OFF \
           -DBUILD_TESTING=OFF \
-          -DBUILD_TRACE_PLUGIN=OFF \
+          -DBUILD_TRACE_PLUGIN=ON \
           -DBUILD_USER_CODE_PLUGIN=ON \
           -DCMAKE_CXX_FLAGS="-Wno-unqualified-std-cast-call" \
           -DCMAKE_CXX_STANDARD=17 \
