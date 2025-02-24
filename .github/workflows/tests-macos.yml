@@ -70,7 +70,7 @@ jobs:
     - name: Inspect PDI library
       run: |
         otool -l $PDI_ROOT/lib/libpdi.1.dylib
-        otool -l $Kokkos_ROOT/lib/libkokkoscore.1.dylib
+        otool -l $Kokkos_ROOT/lib/libkokkoscore.dylib
     - name: Inspect binaries
       run: |
         otool -l ./build/main
@@ -78,7 +78,7 @@ jobs:
     - name: Run test
       run: |
         echo "Before sourcing env.sh"
-        ./build/main || true
+        DYLD_PRINT_LIBRARIES=1 ./build/main || true
         ./test/bin/main || true
         . $PDI_ROOT/share/pdi/env.sh
         echo "After sourcing env.sh"
