@@ -9,7 +9,11 @@ on:
 
 jobs:
   test-macos:
-    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-13, macos-14, macos-15]
+    runs-on: ${{matrix.os}}
     env:
       Kokkos_ROOT: ${{github.workspace}}/my_opt/kokkos
       PDI_ROOT: ${{github.workspace}}/my_opt/pdi
