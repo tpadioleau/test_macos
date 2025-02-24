@@ -69,8 +69,8 @@ jobs:
         cmake --install build --prefix test
     - name: Inspect PDI library
       run: |
-        otool -l $PDI_ROOT/lib/libpdi.so
-        otool -l $Kokkos_ROOT/lib/libkokkoscore.so
+        otool -l $PDI_ROOT/lib/libpdi.1.dylib
+        otool -l $Kokkos_ROOT/lib/libkokkoscore.1.dylib
     - name: Inspect binaries
       run: |
         otool -l ./build/main
