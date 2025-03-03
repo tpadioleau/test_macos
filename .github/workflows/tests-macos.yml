@@ -34,6 +34,11 @@ jobs:
         # PATCH: remove <link.h> for macOS
         sed -i.bak 's|#include <link.h>||g' pdi/plugins/user_code/user_code.cxx
         rm -f pdi/plugins/user_code/user_code.cxx.bak
+        # PATCH: type mismatch
+        sed -i.bak 's/std::numeric_limits<int64_t>::min() + 1, -1l, 1l/std::numeric_limits<int64_t>::min() + 1, -1ll, 1ll/g' pdi/pdi/tests/operators.h
+        rm -f pdi/pdi/tests/operators.h.bak
+        sed -i.bak 's/std::numeric_limits<uint64_t>::min() + 1, -1ul, 1ul/std::numeric_limits<uint64_t>::min() + 1, -1ull, 1ull/g' pdi/pdi/tests/operators.h
+        rm -f pdi/pdi/tests/operators.h.bak
         cmake \
           -DBUILD_BENCHMARKING=OFF \
           -DBUILD_DECL_HDF5_PLUGIN=OFF \
