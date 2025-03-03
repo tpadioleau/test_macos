@@ -44,7 +44,7 @@ jobs:
           -DBUILD_PYCALL_PLUGIN=OFF \
           -DBUILD_SERIALIZE_PLUGIN=OFF \
           -DBUILD_SET_VALUE_PLUGIN=OFF \
-          -DBUILD_TESTING=OFF \
+          -DBUILD_TESTING=ON \
           -DBUILD_TRACE_PLUGIN=ON \
           -DBUILD_USER_CODE_PLUGIN=ON \
           -DCMAKE_CXX_FLAGS="-Wno-unqualified-std-cast-call" \
@@ -52,6 +52,7 @@ jobs:
           -B build-pdi \
           -S pdi
         cmake --build build-pdi
+        ctest --test-dir build-pdi
         cmake --install build-pdi --prefix $PDI_ROOT
         git clone --branch 4.5.01 --depth 1 https://github.com/kokkos/kokkos.git
         cmake \
