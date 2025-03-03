@@ -1,0 +1,101 @@
+# Copyright (C) The DDC development team, see COPYRIGHT.md file
+#
+# SPDX-License-Identifier: MIT
+
+name: Tests on macOS 2
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-macos:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-13, macos-14, macos-15]
+    runs-on: ${{matrix.os}}
+    env:
+      Kokkos_ROOT: ${{github.workspace}}/my_opt/kokkos
+      paraconf_ROOT: ${{github.workspace}}/my_opt/paraconf
+      PDI_ROOT: ${{github.workspace}}/my_opt/pdi
+      spdlog_ROOT: ${{github.workspace}}/my_opt/spdlog
+      yaml_ROOT: ${{github.workspace}}/my_opt/yaml
+      CMAKE_PREFIX_PATH: ${{github.workspace}}/my_opt/pdi
+      CMAKE_BUILD_PARALLEL_LEVEL: 4
+      CC: clang
+      CXX: clang++
+      CMAKE_BUILD_TYPE: Release
+    steps:
+    - run: brew install mpich
+    - name: Checkout built branch
+      uses: actions/checkout@v4
+      with: { submodules: true }
+    - name: Install PDI+user code plugin and dependencies
+      run: |
+        git config --global --add safe.directory '*'
+
+        git clone --branch 0.2.5 --depth 1 https://github.com/yaml/libyaml.git yaml
+        cmake -DBUILD_SHARED_LIBS=ON -B yaml-build -S yaml
+        cmake --build yaml-build
+        cmake --install yaml-build --prefix $yaml_ROOT
+
+        git clone --branch 1.0.0 --depth 1 https://github.com/pdidev/paraconf.git paraconf
+        cmake -DBUILD_SHARED_LIBS=ON -DBUILD_FORTRAN=OFF -DUSE_DEFAULT=SYSTEM -B paraconf-build -S paraconf
+        cmake --build paraconf-build
+        cmake --install paraconf-build --prefix $paraconf_ROOT
+
+        git clone --branch v1.13.0 --depth 1 https://github.com/gabime/spdlog.git spdlog
+        cmake -DBUILD_SHARED_LIBS=ON -B spdlog-build -S spdlog
+        cmake --build spdlog-build
+        cmake --install spdlog-build --prefix $spdlog_ROOT
+
+        git clone --branch v1.8 --depth 1 https://github.com/pdidev/pdi.git
+        # PATCH: type mismatch
+        sed -i.bak 's/std::numeric_limits<int64_t>::min() + 1, -1l, 1l/std::numeric_limits<int64_t>::min() + 1, -1ll, 1ll/g' pdi/pdi/tests/operators.h
+        rm -f pdi/pdi/tests/operators.h.bak
+        sed -i.bak 's/std::numeric_limits<uint64_t>::min() + 1, -1ul, 1ul/std::numeric_limits<uint64_t>::min() + 1, -1ull, 1ull/g' pdi/pdi/tests/operators.h
+        rm -f pdi/pdi/tests/operators.h.bak
+        cmake \
+          -DBUILD_BENCHMARKING=OFF \
+          -DBUILD_DOCUMENTATION=OFF \
+          -DBUILD_FORTRAN=OFF \
+          -DBUILD_TESTING=ON \
+          -DCMAKE_CXX_FLAGS="-Wno-deprecated-declarations -Wno-unqualified-std-cast-call" \
+          -DCMAKE_CXX_STANDARD=17 \
+          -DCMAKE_GTEST_DISCOVER_TESTS_DISCOVERY_MODE=PRE_TEST \
+          -B build-pdi \
+          -S pdi/pdi
+        cmake --build build-pdi
+        ctest --test-dir build-pdi --output-on-failure
+        cmake --install build-pdi --prefix $PDI_ROOT
+        git clone --branch 4.5.01 --depth 1 https://github.com/kokkos/kokkos.git
+        cmake \
+          -DBUILD_SHARED_LIBS=ON \
+          -DCMAKE_CXX_STANDARD=17 \
+          -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
+          -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
+          -DKokkos_ENABLE_SERIAL=ON \
+          -B build-kokkos \
+          -S kokkos
+        cmake --build build-kokkos
+        cmake --install build-kokkos --prefix $Kokkos_ROOT
+        cmake -B build
+        cmake --build build
+        cmake --install build --prefix test
+    - name: Inspect PDI library
+      run: |
+        otool -l $PDI_ROOT/lib/libpdi.1.dylib
+        otool -l $Kokkos_ROOT/lib/libkokkoscore.dylib
+    - name: Inspect binaries
+      run: |
+        otool -l ./build/main
+        otool -l ./test/bin/main
+    - name: Run test
+      run: |
+        echo "Before sourcing env.sh"
+        DYLD_PRINT_LIBRARIES=1 ./build/main || true
+        ./test/bin/main || true
+        . $PDI_ROOT/share/pdi/env.sh
+        echo "After sourcing env.sh"
+        ./build/main || true
+        ./test/bin/main || true
