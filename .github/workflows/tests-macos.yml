@@ -53,8 +53,9 @@ jobs:
           -DBUILD_TESTING=ON \
           -DBUILD_TRACE_PLUGIN=ON \
           -DBUILD_USER_CODE_PLUGIN=ON \
-          -DCMAKE_CXX_FLAGS="-Wno-unqualified-std-cast-call" \
+          -DCMAKE_CXX_FLAGS="-Wno-deprecated-declarations -Wno-unqualified-std-cast-call" \
           -DCMAKE_CXX_STANDARD=17 \
+          -DCMAKE_GTEST_DISCOVER_TESTS_DISCOVERY_MODE=PRE_TEST \
           -B build-pdi \
           -S pdi
         cmake --build build-pdi
