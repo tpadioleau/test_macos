@@ -23,6 +23,7 @@ jobs:
       CXX: clang++
       CMAKE_BUILD_TYPE: Release
     steps:
+    - run: brew install mpich
     - name: Checkout built branch
       uses: actions/checkout@v4
       with: { submodules: true }
