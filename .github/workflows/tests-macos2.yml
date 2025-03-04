@@ -29,7 +29,7 @@ jobs:
       CMAKE_BUILD_PARALLEL_LEVEL: 4
       CC: clang
       CXX: clang++
-      CMAKE_BUILD_TYPE: Release
+      CMAKE_BUILD_TYPE: Debug
     steps:
     - run: brew install mpich
     - name: Checkout built branch
