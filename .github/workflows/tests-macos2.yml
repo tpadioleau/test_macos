@@ -6,7 +6,12 @@ name: Tests on macOS 2
 
 on:
   workflow_dispatch:
-
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        required: false
+        default: false
 jobs:
   test-macos:
     strategy:
@@ -66,8 +71,12 @@ jobs:
           -B build-pdi \
           -S pdi/pdi
         cmake --build build-pdi
-        ctest --test-dir build-pdi --output-on-failure
         cmake --install build-pdi --prefix $PDI_ROOT
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+      if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+    - run: ctest --test-dir build-pdi --output-on-failure
+    - run: |
         git clone --branch 4.5.01 --depth 1 https://github.com/kokkos/kokkos.git
         cmake \
           -DBUILD_SHARED_LIBS=ON \
