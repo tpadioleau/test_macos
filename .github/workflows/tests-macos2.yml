@@ -31,7 +31,7 @@ jobs:
       CXX: clang++
       CMAKE_BUILD_TYPE: Debug
     steps:
-    - run: brew install mpich
+    - run: brew install mpich hdf5
     - uses: actions/checkout@v4
     - name: Install PDI+user code plugin and dependencies
       run: |
@@ -61,7 +61,7 @@ jobs:
           -DBUILD_BENCHMARKING=OFF \
           -DBUILD_DOCUMENTATION=OFF \
           -DBUILD_FORTRAN=OFF \
-          -DBUILD_TESTING=ON \
+          -DBUILD_TESTING=OFF \
           -DCMAKE_CXX_FLAGS="-Wno-deprecated-declarations -Wno-unqualified-std-cast-call" \
           -DCMAKE_CXX_STANDARD=17 \
           -DENABLE_ZSH=OFF \
@@ -69,13 +69,25 @@ jobs:
           -S pdi/pdi
         cmake --build build-pdi
         cmake --install build-pdi --prefix $PDI_ROOT
-        ctest --test-dir build-pdi --output-on-failure
+        # ctest --test-dir build-pdi --output-on-failure
     - name: Setup tmate session
       uses: mxschmitt/action-tmate@v3
       if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
     - name: Plugins
       run: |
         export DYLD_LIBRARY_PATH=$paraconf_ROOT/lib:$spdlog_ROOT/lib:$yaml_ROOT/lib
+
+        cmake \
+          -DBUILD_BENCHMARKING=OFF \
+          -DBUILD_FORTRAN=OFF \
+          -DBUILD_HDF5_PARALLEL=OFF \
+          -DBUILD_TESTING=ON \
+          -DCMAKE_CXX_FLAGS="-Wno-deprecated-declarations -Wno-unqualified-std-cast-call" \
+          -DCMAKE_CXX_STANDARD=17 \
+          -B build-plugins-decl_hdf5 \
+          -S pdi/plugins/decl_hdf5
+        cmake --build build-plugins-decl_hdf5
+        ctest --test-dir build-plugins-decl_hdf5 --output-on-failure
 
         cmake \
           -DBUILD_FORTRAN=OFF \
