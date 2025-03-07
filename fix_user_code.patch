@@ -1,0 +1,12 @@
+diff --git a/plugins/user_code/user_code.cxx b/plugins/user_code/user_code.cxx
+index 52b2b6a8..9868e650 100644
+--- a/plugins/user_code/user_code.cxx
++++ b/plugins/user_code/user_code.cxx
+@@ -29,7 +29,6 @@
+ #include <vector>
+ 
+ #include <dlfcn.h>
+-#include <link.h>
+ 
+ #include <pdi.h>
+ #include <pdi/context.h>

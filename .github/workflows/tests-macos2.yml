@@ -32,9 +32,7 @@ jobs:
       CMAKE_BUILD_TYPE: Debug
     steps:
     - run: brew install mpich
-    - name: Checkout built branch
-      uses: actions/checkout@v4
-      with: { submodules: true }
+    - uses: actions/checkout@v4
     - name: Install PDI+user code plugin and dependencies
       run: |
         git config --global --add safe.directory '*'
@@ -54,12 +52,9 @@ jobs:
         cmake --build spdlog-build
         cmake --install spdlog-build --prefix $spdlog_ROOT
 
-        git clone --branch v1.8 --depth 1 https://github.com/pdidev/pdi.git
-        # PATCH: type mismatch
-        sed -i.bak 's/std::numeric_limits<int64_t>::min() + 1, -1l, 1l/std::numeric_limits<int64_t>::min() + 1, -1ll, 1ll/g' pdi/pdi/tests/operators.h
-        rm -f pdi/pdi/tests/operators.h.bak
-        sed -i.bak 's/std::numeric_limits<uint64_t>::min() + 1, -1ul, 1ul/std::numeric_limits<uint64_t>::min() + 1, -1ull, 1ull/g' pdi/pdi/tests/operators.h
-        rm -f pdi/pdi/tests/operators.h.bak
+        git clone --branch 1.8.3 --depth 1 https://github.com/pdidev/pdi.git
+        mv *.patch pdi/
+        git -C pdi apply fix_aligned_alloc.patch fix_integer_types.patch fix_user_code.patch
         cmake \
           -DBUILD_BENCHMARKING=OFF \
           -DBUILD_DOCUMENTATION=OFF \
@@ -68,6 +63,7 @@ jobs:
           -DCMAKE_CXX_FLAGS="-Wno-deprecated-declarations -Wno-unqualified-std-cast-call" \
           -DCMAKE_CXX_STANDARD=17 \
           -DCMAKE_GTEST_DISCOVER_TESTS_DISCOVERY_MODE=PRE_TEST \
+          -DENABLE_ZSH=OFF \
           -B build-pdi \
           -S pdi/pdi
         cmake --build build-pdi

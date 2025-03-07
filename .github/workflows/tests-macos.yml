@@ -24,13 +24,11 @@ jobs:
       CMAKE_BUILD_TYPE: Release
     steps:
     - run: brew install mpich
-    - name: Checkout built branch
-      uses: actions/checkout@v4
-      with: { submodules: true }
+    - uses: actions/checkout@v4
     - name: Install PDI+user code plugin and dependencies
       run: |
         git config --global --add safe.directory '*'
-        git clone --branch v1.8 --depth 1 https://github.com/pdidev/pdi.git
+        git clone --branch 1.8.3 --depth 1 https://github.com/pdidev/pdi.git
         # PATCH: remove <link.h> for macOS
         sed -i.bak 's|#include <link.h>||g' pdi/plugins/user_code/user_code.cxx
         rm -f pdi/plugins/user_code/user_code.cxx.bak
