@@ -72,6 +72,47 @@ jobs:
       uses: mxschmitt/action-tmate@v3
       if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
     - run: ctest --test-dir build-pdi --output-on-failure
+    - name: Plugins
+      run: |
+        cmake \
+          -DBUILD_TESTING=ON \
+          -DCMAKE_CXX_FLAGS="-Wno-deprecated-declarations -Wno-unqualified-std-cast-call" \
+          -DCMAKE_CXX_STANDARD=17 \
+          -DCMAKE_GTEST_DISCOVER_TESTS_DISCOVERY_MODE=PRE_TEST \
+          -B build-plugins-user_code \
+          -S pdi/plugins/user_code
+        cmake --build build-plugins-user_code
+        ctest --test-dir build-plugins-user_code
+
+        cmake \
+          -DBUILD_TESTING=ON \
+          -DCMAKE_CXX_FLAGS="-Wno-deprecated-declarations -Wno-unqualified-std-cast-call" \
+          -DCMAKE_CXX_STANDARD=17 \
+          -DCMAKE_GTEST_DISCOVER_TESTS_DISCOVERY_MODE=PRE_TEST \
+          -B build-plugins-trace \
+          -S pdi/plugins/trace
+        cmake --build build-plugins-trace
+        ctest --test-dir build-plugins-trace
+
+        cmake \
+          -DBUILD_TESTING=ON \
+          -DCMAKE_CXX_FLAGS="-Wno-deprecated-declarations -Wno-unqualified-std-cast-call" \
+          -DCMAKE_CXX_STANDARD=17 \
+          -DCMAKE_GTEST_DISCOVER_TESTS_DISCOVERY_MODE=PRE_TEST \
+          -B build-plugins-serialize \
+          -S pdi/plugins/serialize
+        cmake --build build-plugins-serialize
+        ctest --test-dir build-plugins-serialize
+
+        cmake \
+          -DBUILD_TESTING=ON \
+          -DCMAKE_CXX_FLAGS="-Wno-deprecated-declarations -Wno-unqualified-std-cast-call" \
+          -DCMAKE_CXX_STANDARD=17 \
+          -DCMAKE_GTEST_DISCOVER_TESTS_DISCOVERY_MODE=PRE_TEST \
+          -B build-plugins-mpi \
+          -S pdi/plugins/mpi
+        cmake --build build-plugins-mpi
+        ctest --test-dir build-plugins-mpi
     - run: |
         git clone --branch 4.5.01 --depth 1 https://github.com/kokkos/kokkos.git
         cmake \
