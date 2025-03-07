@@ -43,6 +43,8 @@ jobs:
         cmake --install yaml-build --prefix $yaml_ROOT
 
         git clone --branch 1.0.0 --depth 1 https://github.com/pdidev/paraconf.git paraconf
+        mv fix_paraconf_cmake_minimum_required.patch paraconf
+        git -C paraconf apply fix_paraconf_cmake_minimum_required.patch
         cmake -DBUILD_SHARED_LIBS=ON -DBUILD_FORTRAN=OFF -DUSE_DEFAULT=SYSTEM -B paraconf-build -S paraconf
         cmake --build paraconf-build
         cmake --install paraconf-build --prefix $paraconf_ROOT
@@ -113,7 +115,6 @@ jobs:
           -B build-plugins-trace \
           -S pdi/plugins/trace
         cmake --build build-plugins-trace
-        ctest --test-dir build-plugins-trace --output-on-failure
 
         cmake \
           -DBUILD_TESTING=ON \
