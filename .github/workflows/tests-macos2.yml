@@ -31,7 +31,7 @@ jobs:
       CXX: clang++
       CMAKE_BUILD_TYPE: Debug
     steps:
-    - run: brew install mpich hdf5
+    - run: brew install mpich hdf5 netcdf
     - uses: actions/checkout@v4
     - name: Install PDI+user code plugin and dependencies
       run: |
@@ -88,6 +88,16 @@ jobs:
           -S pdi/plugins/decl_hdf5
         cmake --build build-plugins-decl_hdf5
         ctest --test-dir build-plugins-decl_hdf5 --output-on-failure
+
+        cmake \
+          -DBUILD_NETCDF_PARALLEL=OFF \
+          -DBUILD_TESTING=ON \
+          -DCMAKE_CXX_FLAGS="-Wno-deprecated-declarations -Wno-unqualified-std-cast-call" \
+          -DCMAKE_CXX_STANDARD=17 \
+          -B build-plugins-decl_netcdf \
+          -S pdi/plugins/decl_netcdf
+        cmake --build build-plugins-decl_netcdf
+        ctest --test-dir build-plugins-decl_netcdf --output-on-failure
 
         cmake \
           -DBUILD_FORTRAN=OFF \
