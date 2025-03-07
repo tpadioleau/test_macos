@@ -1,0 +1,13 @@
+diff --git a/pdi/src/global_context.h b/pdi/src/global_context.h
+index d6b0b260..3c596a50 100644
+--- a/pdi/src/global_context.h
++++ b/pdi/src/global_context.h
+@@ -110,7 +110,7 @@ public:
+ 
+ 	/** Returns the iterator that corresponds to the provided Data_descriptor name
+ 	 */
+-	Iterator find(const std::string& name);
++	Iterator find(const std::string& name) override;
+ 
+ 	/** Triggers a PDI "event"
+ 	 * \param[in] name the event name
