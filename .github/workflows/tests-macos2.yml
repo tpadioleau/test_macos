@@ -60,7 +60,7 @@ jobs:
         ref: 10.2.1
         path: fmt
     - run: |
-        cmake -DBUILD_SHARED_LIBS=ON -B fmt/build -S fmt
+        cmake -DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF -B fmt/build -S fmt
         cmake --build fmt/build
         cmake --install fmt/build --prefix $fmt_ROOT
     - uses: actions/checkout@v4
@@ -77,17 +77,11 @@ jobs:
         repository: pdidev/pdi
         ref: 1.8.3
         path: pdi
-    - run: |
-        cmake -DBUILD_SHARED_LIBS=ON -B spdlog/build -S spdlog
-        cmake --build spdlog/build
-        cmake --install spdlog/build --prefix $spdlog_ROOT
     - name: Setup tmate session
       uses: mxschmitt/action-tmate@v3
       if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
     - name: Install PDI
       run: |
-        export CXXFLAGS="-Wno-deprecated-declarations -Wno-unqualified-std-cast-call"
-
         mv *.patch pdi/
         git -C pdi apply fix_aligned_alloc.patch fix_abs.patch fix_integer_types.patch fix_override.patch fix_user_code.patch
         cmake \
@@ -95,6 +89,7 @@ jobs:
           -DBUILD_DOCUMENTATION=OFF \
           -DBUILD_FORTRAN=OFF \
           -DBUILD_TESTING=ON \
+          -DCMAKE_CXX_FLAGS="-fsanitize=undefined -fno-omit-frame-pointer -Wno-deprecated-declarations -Wno-unqualified-std-cast-call" \
           -DCMAKE_CXX_STANDARD=17 \
           -DENABLE_ZSH=OFF \
           -B pdi/pdi/build \
@@ -104,6 +99,7 @@ jobs:
         ctest --test-dir pdi/pdi/build --output-on-failure
     - name: Install PDI plugins
       run: |
+        export CXXFLAGS="-fsanitize=undefined -fno-omit-frame-pointer -Wno-deprecated-declarations -Wno-unqualified-std-cast-call"
         export DYLD_LIBRARY_PATH=$fmt_ROOT/lib:$paraconf_ROOT/lib:$spdlog_ROOT/lib:$yaml_ROOT/lib
 
         cmake \
