@@ -23,6 +23,7 @@ jobs:
       Kokkos_ROOT: ${{github.workspace}}/my_opt/kokkos
       paraconf_ROOT: ${{github.workspace}}/my_opt/paraconf
       PDI_ROOT: ${{github.workspace}}/my_opt/pdi
+      fmt_ROOT: ${{github.workspace}}/my_opt/fmt
       spdlog_ROOT: ${{github.workspace}}/my_opt/spdlog
       yaml_ROOT: ${{github.workspace}}/my_opt/yaml
       CMAKE_PREFIX_PATH: ${{github.workspace}}/my_opt/pdi
@@ -55,11 +56,20 @@ jobs:
         cmake --install paraconf/build --prefix $paraconf_ROOT
     - uses: actions/checkout@v4
       with:
+        repository: fmtlib/fmt
+        ref: 11.1.4
+        path: fmt
+    - run: |
+        cmake -DBUILD_SHARED_LIBS=ON -B fmt/build -S fmt
+        cmake --build fmt/build
+        cmake --install fmt/build --prefix $fmt_ROOT
+    - uses: actions/checkout@v4
+      with:
         repository: gabime/spdlog
         ref: v1.13.0
         path: spdlog
     - run: |
-        cmake -DBUILD_SHARED_LIBS=ON -B spdlog/build -S spdlog
+        cmake -DBUILD_SHARED_LIBS=ON -DSPDLOG_FMT_EXTERNAL=ON -B spdlog/build -S spdlog
         cmake --build spdlog/build
         cmake --install spdlog/build --prefix $spdlog_ROOT
     - uses: actions/checkout@v4
@@ -94,7 +104,7 @@ jobs:
         ctest --test-dir pdi/pdi/build --output-on-failure
     - name: Install PDI plugins
       run: |
-        export DYLD_LIBRARY_PATH=$paraconf_ROOT/lib:$spdlog_ROOT/lib:$yaml_ROOT/lib
+        export DYLD_LIBRARY_PATH=$fmt_ROOT/lib:$paraconf_ROOT/lib:$spdlog_ROOT/lib:$yaml_ROOT/lib
 
         cmake \
           -DBUILD_BENCHMARKING=OFF \
