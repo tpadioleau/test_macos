@@ -57,7 +57,7 @@ jobs:
     - uses: actions/checkout@v4
       with:
         repository: fmtlib/fmt
-        ref: 11.1.4
+        ref: 10.2.1
         path: fmt
     - run: |
         cmake -DBUILD_SHARED_LIBS=ON -B fmt/build -S fmt
