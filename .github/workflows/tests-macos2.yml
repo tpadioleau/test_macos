@@ -26,7 +26,7 @@ jobs:
       fmt_ROOT: ${{github.workspace}}/my_opt/fmt
       spdlog_ROOT: ${{github.workspace}}/my_opt/spdlog
       yaml_ROOT: ${{github.workspace}}/my_opt/yaml
-      CMAKE_PREFIX_PATH: ${{github.workspace}}/my_opt/pdi
+      CMAKE_PREFIX_PATH: ${{github.workspace}}/my_opt
       CMAKE_BUILD_PARALLEL_LEVEL: 4
       CC: clang
       CXX: clang++
