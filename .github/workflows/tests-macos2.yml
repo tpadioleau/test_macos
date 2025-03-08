@@ -60,7 +60,7 @@ jobs:
         ref: 10.2.1
         path: fmt
     - run: |
-        cmake -DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF -B fmt/build -S fmt
+        cmake -DBUILD_SHARED_LIBS=ON -DFMT_TEST=OFF -B fmt/build -S fmt
         cmake --build fmt/build
         cmake --install fmt/build --prefix $fmt_ROOT
     - uses: actions/checkout@v4
