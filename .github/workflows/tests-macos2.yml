@@ -33,47 +33,66 @@ jobs:
     steps:
     - run: brew install mpich hdf5 netcdf
     - uses: actions/checkout@v4
-    - name: Install PDI+user code plugin and dependencies
-      run: |
-        git config --global --add safe.directory '*'
-
-        git clone --branch 0.2.5 --depth 1 https://github.com/yaml/libyaml.git yaml
-        cmake -DBUILD_SHARED_LIBS=ON -B yaml-build -S yaml
-        cmake --build yaml-build
-        cmake --install yaml-build --prefix $yaml_ROOT
-
-        git clone --branch 1.0.0 --depth 1 https://github.com/pdidev/paraconf.git paraconf
+    - uses: actions/checkout@v4
+      with:
+        repository: yaml/libyaml
+        ref: 0.2.5
+        path: yaml
+    - run: |
+        cmake -DBUILD_SHARED_LIBS=ON -B yaml/build -S yaml
+        cmake --build yaml/build
+        cmake --install yaml/build --prefix $yaml_ROOT
+    - uses: actions/checkout@v4
+      with:
+        repository: pdidev/paraconf
+        ref: 1.0.0
+        path: paraconf
+    - run: |
         mv fix_paraconf_cmake_minimum_required.patch paraconf
         git -C paraconf apply fix_paraconf_cmake_minimum_required.patch
-        cmake -DBUILD_SHARED_LIBS=ON -DBUILD_FORTRAN=OFF -DUSE_DEFAULT=SYSTEM -B paraconf-build -S paraconf
-        cmake --build paraconf-build
-        cmake --install paraconf-build --prefix $paraconf_ROOT
+        cmake -DBUILD_SHARED_LIBS=ON -DBUILD_FORTRAN=OFF -DUSE_DEFAULT=SYSTEM -B paraconf/build -S paraconf
+        cmake --build paraconf/build
+        cmake --install paraconf/build --prefix $paraconf_ROOT
+    - uses: actions/checkout@v4
+      with:
+        repository: gabime/spdlog
+        ref: v1.13.0
+        path: spdlog
+    - run: |
+        cmake -DBUILD_SHARED_LIBS=ON -B spdlog/build -S spdlog
+        cmake --build spdlog/build
+        cmake --install spdlog/build --prefix $spdlog_ROOT
+    - uses: actions/checkout@v4
+      with:
+        repository: pdidev/pdi
+        ref: 1.8.3
+        path: pdi
+    - run: |
+        cmake -DBUILD_SHARED_LIBS=ON -B spdlog/build -S spdlog
+        cmake --build spdlog/build
+        cmake --install spdlog/build --prefix $spdlog_ROOT
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+      if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+    - name: Install PDI
+      run: |
+        export CXXFLAGS="-Wno-deprecated-declarations -Wno-unqualified-std-cast-call"
 
-        git clone --branch v1.13.0 --depth 1 https://github.com/gabime/spdlog.git spdlog
-        cmake -DBUILD_SHARED_LIBS=ON -B spdlog-build -S spdlog
-        cmake --build spdlog-build
-        cmake --install spdlog-build --prefix $spdlog_ROOT
-
-        git clone --branch 1.8.3 --depth 1 https://github.com/pdidev/pdi.git
         mv *.patch pdi/
         git -C pdi apply fix_aligned_alloc.patch fix_abs.patch fix_integer_types.patch fix_override.patch fix_user_code.patch
         cmake \
           -DBUILD_BENCHMARKING=OFF \
           -DBUILD_DOCUMENTATION=OFF \
           -DBUILD_FORTRAN=OFF \
-          -DBUILD_TESTING=OFF \
-          -DCMAKE_CXX_FLAGS="-Wno-deprecated-declarations -Wno-unqualified-std-cast-call" \
+          -DBUILD_TESTING=ON \
           -DCMAKE_CXX_STANDARD=17 \
           -DENABLE_ZSH=OFF \
-          -B build-pdi \
+          -B pdi/pdi/build \
           -S pdi/pdi
-        cmake --build build-pdi
-        cmake --install build-pdi --prefix $PDI_ROOT
-        # ctest --test-dir build-pdi --output-on-failure
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
-      if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
-    - name: Plugins
+        cmake --build pdi/pdi/build
+        cmake --install pdi/pdi/build --prefix $PDI_ROOT
+        ctest --test-dir pdi/pdi/build --output-on-failure
+    - name: Install PDI plugins
       run: |
         export DYLD_LIBRARY_PATH=$paraconf_ROOT/lib:$spdlog_ROOT/lib:$yaml_ROOT/lib
 
@@ -82,78 +101,75 @@ jobs:
           -DBUILD_FORTRAN=OFF \
           -DBUILD_HDF5_PARALLEL=OFF \
           -DBUILD_TESTING=ON \
-          -DCMAKE_CXX_FLAGS="-Wno-deprecated-declarations -Wno-unqualified-std-cast-call" \
           -DCMAKE_CXX_STANDARD=17 \
-          -B build-plugins-decl_hdf5 \
+          -B pdi/plugins/decl_hdf5/build \
           -S pdi/plugins/decl_hdf5
-        cmake --build build-plugins-decl_hdf5
-        ctest --test-dir build-plugins-decl_hdf5 --output-on-failure
+        cmake --build pdi/plugins/decl_hdf5/build
+        ctest --test-dir pdi/plugins/decl_hdf5/build --output-on-failure
 
         cmake \
           -DBUILD_NETCDF_PARALLEL=OFF \
           -DBUILD_TESTING=ON \
-          -DCMAKE_CXX_FLAGS="-Wno-deprecated-declarations -Wno-unqualified-std-cast-call" \
           -DCMAKE_CXX_STANDARD=17 \
-          -B build-plugins-decl_netcdf \
+          -B pdi/plugins/decl_netcdf/build \
           -S pdi/plugins/decl_netcdf
-        cmake --build build-plugins-decl_netcdf
-        ctest --test-dir build-plugins-decl_netcdf --output-on-failure
+        cmake --build pdi/plugins/decl_netcdf/build
+        ctest --test-dir pdi/plugins/decl_netcdf/build --output-on-failure
 
         cmake \
           -DBUILD_FORTRAN=OFF \
           -DBUILD_TESTING=ON \
-          -DCMAKE_CXX_FLAGS="-Wno-deprecated-declarations -Wno-unqualified-std-cast-call" \
           -DCMAKE_CXX_STANDARD=17 \
-          -B build-plugins-mpi \
+          -B pdi/plugins/mpi/build \
           -S pdi/plugins/mpi
-        cmake --build build-plugins-mpi
-        ctest --test-dir build-plugins-mpi --output-on-failure
+        cmake --build pdi/plugins/mpi/build
+        ctest --test-dir pdi/plugins/mpi/build --output-on-failure
 
         cmake \
           -DBUILD_TESTING=ON \
-          -DCMAKE_CXX_FLAGS="-Wno-deprecated-declarations -Wno-unqualified-std-cast-call" \
           -DCMAKE_CXX_STANDARD=17 \
-          -B build-plugins-serialize \
+          -B pdi/plugins/serialize/build \
           -S pdi/plugins/serialize
-        cmake --build build-plugins-serialize
-        ctest --test-dir build-plugins-serialize --output-on-failure
+        cmake --build pdi/plugins/serialize/build
+        ctest --test-dir pdi/plugins/serialize/build --output-on-failure
 
         cmake \
           -DBUILD_TESTING=ON \
-          -DCMAKE_CXX_FLAGS="-Wno-deprecated-declarations -Wno-unqualified-std-cast-call" \
           -DCMAKE_CXX_STANDARD=17 \
-          -B build-plugins-set_value \
+          -B pdi/plugins/set_value/build \
           -S pdi/plugins/set_value
-        cmake --build build-plugins-set_value
-        ctest --test-dir build-plugins-set_value --output-on-failure
+        cmake --build pdi/plugins/set_value/build
+        ctest --test-dir pdi/plugins/set_value/build --output-on-failure
 
         cmake \
-          -DCMAKE_CXX_FLAGS="-Wno-deprecated-declarations -Wno-unqualified-std-cast-call" \
           -DCMAKE_CXX_STANDARD=17 \
-          -B build-plugins-trace \
+          -B pdi/plugins/trace/build \
           -S pdi/plugins/trace
-        cmake --build build-plugins-trace
+        cmake --build pdi/plugins/trace/build
 
         cmake \
           -DBUILD_TESTING=ON \
-          -DCMAKE_CXX_FLAGS="-Wno-deprecated-declarations -Wno-unqualified-std-cast-call" \
           -DCMAKE_CXX_STANDARD=17 \
-          -B build-plugins-user_code \
+          -B pdi/plugins/user_code/build \
           -S pdi/plugins/user_code
-        cmake --build build-plugins-user_code
-        ctest --test-dir build-plugins-user_code --output-on-failure
+        cmake --build pdi/plugins/user_code/build
+        ctest --test-dir pdi/plugins/user_code/build --output-on-failure
+    - uses: actions/checkout@v4
+      with:
+        repository: kokkos/kokkos
+        ref: 4.5.01
+        path: kokkos
     - run: |
-        git clone --branch 4.5.01 --depth 1 https://github.com/kokkos/kokkos.git
         cmake \
           -DBUILD_SHARED_LIBS=ON \
           -DCMAKE_CXX_STANDARD=17 \
           -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
           -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
           -DKokkos_ENABLE_SERIAL=ON \
-          -B build-kokkos \
+          -B kokkos/build \
           -S kokkos
-        cmake --build build-kokkos
-        cmake --install build-kokkos --prefix $Kokkos_ROOT
+        cmake --build kokkos/build
+        cmake --install kokkos/build --prefix $Kokkos_ROOT
         cmake -B build
         cmake --build build
         cmake --install build --prefix test
