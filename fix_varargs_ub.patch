@@ -1,0 +1,36 @@
+diff --git a/pdi/include/pdi.h b/pdi/include/pdi.h
+index e801d72e..bb391641 100644
+--- a/pdi/include/pdi.h
++++ b/pdi/include/pdi.h
+@@ -264,7 +264,7 @@ PDI_status_t PDI_EXPORT PDI_expose(const char* name, void* data, PDI_inout_t acc
+  *                inidactes an end of the list.
+  * \return an error status
+  */
+-PDI_status_t PDI_EXPORT PDI_multi_expose(const char* event_name, const char* name, void* data, PDI_inout_t access, ...);
++PDI_status_t PDI_EXPORT PDI_multi_expose(const char* event_name, ...);
+ 
+ #ifdef PDI_WITH_DEPRECATED
+ 
+diff --git a/pdi/src/pdi.cxx b/pdi/src/pdi.cxx
+index aa80b356..ec979ce9 100644
+--- a/pdi/src/pdi.cxx
++++ b/pdi/src/pdi.cxx
+@@ -320,16 +320,14 @@ try {
+ 	return status;
+ }
+ 
+-PDI_status_t PDI_multi_expose(const char* event_name, const char* name, void* data, PDI_inout_t access, ...)
++PDI_status_t PDI_multi_expose(const char* event_name, ...)
+ try {
+ 	Paraconf_wrapper fw;
+ 	va_list ap;
+ 	list<string> transaction_data;
+ 	PDI_status_t status;
+-	if ((status = PDI_share(name, data, access))) return status;
+-	transaction_data.emplace_back(name);
+ 
+-	va_start(ap, access);
++	va_start(ap, event_name);
+ 	int i = 0;
+ 	while (const char* v_name = va_arg(ap, const char*)) {
+ 		void* v_data = va_arg(ap, void*);
