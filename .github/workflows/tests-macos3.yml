@@ -1,0 +1,63 @@
+# Copyright (C) The DDC development team, see COPYRIGHT.md file
+#
+# SPDX-License-Identifier: MIT
+
+name: Tests on macOS 3
+
+on:
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        required: false
+        default: false
+jobs:
+  test-macos:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-13, macos-14, macos-15]
+    runs-on: ${{matrix.os}}
+    env:
+      CMAKE_BUILD_PARALLEL_LEVEL: 4
+      CC: clang
+      CXX: clang++
+      CMAKE_BUILD_TYPE: Debug
+    steps:
+    - run: brew install mpich hdf5 netcdf
+    - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
+      with:
+        repository: pdidev/pdi
+        ref: main
+        path: pdi
+        submodules: true
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+      if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+    - name: Build PDI
+      run: |
+        mv *.patch pdi/
+        git -C pdi apply fix_abs.patch fix_override.patch fix_varargs_ub.patch
+        cmake \
+          -DBUILD_BENCHMARKING=OFF \
+          -DBUILD_DECL_HDF5_PLUGIN=ON \
+          -DBUILD_DECL_NETCDF_PLUGIN=ON \
+          -DBUILD_DEISA_PLUGIN=OFF \
+          -DBUILD_DOCUMENTATION=OFF \
+          -DBUILD_HDF5_PARALLEL=OFF \
+          -DBUILD_FORTRAN=OFF \
+          -DBUILD_MPI_PLUGIN=ON \
+          -DBUILD_PYCALL_PLUGIN=OFF \
+          -DBUILD_SERIALIZE_PLUGIN=ON \
+          -DBUILD_SET_VALUE_PLUGIN=ON \
+          -DBUILD_TESTING=ON \
+          -DBUILD_TRACE_PLUGIN=ON \
+          -DBUILD_USER_CODE_PLUGIN=ON \
+          -DCMAKE_CXX_FLAGS="-fsanitize=undefined -fno-omit-frame-pointer -Wno-deprecated-declarations -Wno-unqualified-std-cast-call" \
+          -DCMAKE_CXX_STANDARD=17 \
+          -B pdi/build \
+          -S pdi
+        cmake --build pdi/build
+        ctest --test-dir pdi/build --output-on-failure
