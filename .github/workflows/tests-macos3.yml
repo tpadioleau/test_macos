@@ -25,7 +25,7 @@ jobs:
       CXX: clang++
       CMAKE_BUILD_TYPE: Debug
     steps:
-    - run: brew install mpich hdf5 netcdf
+    - run: brew install mpich hdf5-mpi pnetcdf
     - uses: actions/checkout@v4
     - uses: actions/checkout@v4
       with:
@@ -46,15 +46,18 @@ jobs:
           -DBUILD_DECL_NETCDF_PLUGIN=ON \
           -DBUILD_DEISA_PLUGIN=OFF \
           -DBUILD_DOCUMENTATION=OFF \
-          -DBUILD_HDF5_PARALLEL=OFF \
+          -DBUILD_HDF5_PARALLEL=ON \
           -DBUILD_FORTRAN=OFF \
           -DBUILD_MPI_PLUGIN=ON \
+          -DBUILD_NETCDF_PARALLEL=ON \
           -DBUILD_PYCALL_PLUGIN=OFF \
           -DBUILD_SERIALIZE_PLUGIN=ON \
           -DBUILD_SET_VALUE_PLUGIN=ON \
           -DBUILD_TESTING=ON \
           -DBUILD_TRACE_PLUGIN=ON \
           -DBUILD_USER_CODE_PLUGIN=ON \
+          -DUSE_HDF5=SYSTEM \
+          -DUSE_NetCDF=SYSTEM \
           -DCMAKE_CXX_FLAGS="-fsanitize=undefined -fno-omit-frame-pointer -Wno-deprecated-declarations -Wno-unqualified-std-cast-call" \
           -DCMAKE_CXX_STANDARD=17 \
           -B pdi/build \
