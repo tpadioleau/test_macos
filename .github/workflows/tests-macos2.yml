@@ -32,7 +32,7 @@ jobs:
       CXX: clang++
       CMAKE_BUILD_TYPE: Debug
     steps:
-    - run: brew install mpich hdf5 netcdf pybind11 python-setuptools
+    - run: brew install mpich hdf5 netcdf nlohmann-json pybind11 python-setuptools
     - uses: actions/checkout@v4
     - uses: actions/checkout@v4
       with:
@@ -144,6 +144,14 @@ jobs:
         cmake \
           -DBUILD_TESTING=ON \
           -DCMAKE_CXX_STANDARD=17 \
+          -B pdi/plugins/json/build \
+          -S pdi/plugins/json
+        cmake --build pdi/plugins/json/build
+        ctest --test-dir pdi/plugins/json/build --output-on-failure
+
+        cmake \
+          -DBUILD_TESTING=ON \
+          -DCMAKE_CXX_STANDARD=17 \
           -B pdi/plugins/serialize/build \
           -S pdi/plugins/serialize
         cmake --build pdi/plugins/serialize/build
@@ -202,7 +210,7 @@ jobs:
         echo "Before setting DYLD_LIBRARY_PATH"
         DYLD_PRINT_LIBRARIES=1 ./build/main || true
         DYLD_PRINT_LIBRARIES=1 ./test/bin/main || true
-        export DYLD_LIBRARY_PATH=$PDI_ROOT/lib:$fmt_ROOT/lib:$paraconf_ROOT/lib:$spdlog_ROOT/lib:$yaml_ROOT/lib
+        export DYLD_LIBRARY_PATH=$Kokkos_ROOT/lib:$PDI_ROOT/lib:$fmt_ROOT/lib:$paraconf_ROOT/lib:$spdlog_ROOT/lib:$yaml_ROOT/lib
         echo "After setting DYLD_LIBRARY_PATH"
         ./build/main
         ./test/bin/main

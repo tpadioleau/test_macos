@@ -7,8 +7,6 @@ int main(int argc, char **argv) {
   std::string const pdi_conf(R"df(
 metadata:
     a: int
-plugins:
-    trace:
 )df");
   Kokkos::ScopeGuard const scope(argc, argv);
   PC_tree_t conf = PC_parse_string(pdi_conf.c_str());
