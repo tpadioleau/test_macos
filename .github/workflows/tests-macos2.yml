@@ -199,10 +199,10 @@ jobs:
         otool -l ./test/bin/main
     - name: Run test
       run: |
-        echo "Before sourcing env.sh"
+        echo "Before setting DYLD_LIBRARY_PATH"
         DYLD_PRINT_LIBRARIES=1 ./build/main || true
-        ./test/bin/main || true
-        . $PDI_ROOT/share/pdi/env.sh
-        echo "After sourcing env.sh"
-        ./build/main || true
-        ./test/bin/main || true
+        DYLD_PRINT_LIBRARIES=1 ./test/bin/main || true
+        export DYLD_LIBRARY_PATH=$PDI_ROOT/lib:$fmt_ROOT/lib:$paraconf_ROOT/lib:$spdlog_ROOT/lib:$yaml_ROOT/lib
+        echo "After setting DYLD_LIBRARY_PATH"
+        ./build/main
+        ./test/bin/main
