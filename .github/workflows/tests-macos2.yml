@@ -32,7 +32,7 @@ jobs:
       CXX: clang++
       CMAKE_BUILD_TYPE: Debug
     steps:
-    - run: brew install mpich hdf5 netcdf
+    - run: brew install mpich hdf5 netcdf pybind11 python-setuptools
     - uses: actions/checkout@v4
     - uses: actions/checkout@v4
       with:
@@ -88,9 +88,11 @@ jobs:
           -DBUILD_BENCHMARKING=OFF \
           -DBUILD_DOCUMENTATION=OFF \
           -DBUILD_FORTRAN=OFF \
+          -DBUILD_PYTHON=ON \
           -DBUILD_TESTING=ON \
           -DCMAKE_CXX_FLAGS="-fsanitize=undefined -fno-omit-frame-pointer -Wno-deprecated-declarations -Wno-unqualified-std-cast-call" \
           -DCMAKE_CXX_STANDARD=17 \
+          -DCMAKE_SHARED_LINKER_FLAGS="-undefined dynamic_lookup" \
           -DENABLE_ZSH=OFF \
           -B pdi/pdi/build \
           -S pdi/pdi
@@ -130,6 +132,14 @@ jobs:
           -S pdi/plugins/mpi
         cmake --build pdi/plugins/mpi/build
         ctest --test-dir pdi/plugins/mpi/build --output-on-failure
+
+        cmake \
+          -DBUILD_TESTING=ON \
+          -DCMAKE_CXX_STANDARD=17 \
+          -B pdi/plugins/pycall/build \
+          -S pdi/plugins/pycall
+        cmake --build pdi/plugins/pycall/build
+        ctest --test-dir pdi/plugins/pycall/build --output-on-failure
 
         cmake \
           -DBUILD_TESTING=ON \
