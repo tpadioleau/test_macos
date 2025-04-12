@@ -75,7 +75,7 @@ jobs:
     - uses: actions/checkout@v4
       with:
         repository: pdidev/pdi
-        ref: 1.8.3
+        ref: main
         path: pdi
     - name: Setup tmate session
       uses: mxschmitt/action-tmate@v3
@@ -83,7 +83,7 @@ jobs:
     - name: Install PDI
       run: |
         mv *.patch pdi/
-        git -C pdi apply fix_aligned_alloc.patch fix_abs.patch fix_integer_types.patch fix_override.patch fix_user_code.patch fix_varargs_ub.patch
+        git -C pdi apply fix_varargs_ub.patch
         cmake \
           -DBUILD_BENCHMARKING=OFF \
           -DBUILD_DOCUMENTATION=OFF \

@@ -39,7 +39,7 @@ jobs:
     - name: Build PDI
       run: |
         mv *.patch pdi/
-        git -C pdi apply fix_abs.patch fix_env.patch fix_override.patch fix_varargs_ub.patch
+        git -C pdi apply fix_env.patch fix_varargs_ub.patch
         cmake \
           -DBUILD_BENCHMARKING=OFF \
           -DBUILD_DECL_HDF5_PLUGIN=ON \
