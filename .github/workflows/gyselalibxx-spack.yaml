@@ -1,0 +1,43 @@
+name: Installation tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        required: false
+        default: false
+
+jobs:
+  spack_test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-14]
+    runs-on: ${{ matrix.os }}
+    name: Install Test
+    steps:
+      - name: Checkout gyselalibxx
+        uses: actions/checkout@v4
+        with:
+          repository: gyselax/gyselalibxx
+          ref: devel
+          submodules: true
+      - name: Install spack
+        run: |
+          mkdir -p spack_setup && cd spack_setup
+          ../toolchains/cpu.spack.gyselalibxx_env/prepare.sh
+        shell: bash
+        timeout-minutes: 180
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+      - name: Build code
+        uses: ./.github/actions/build_code
+        with:
+          toolchain: toolchains/cpu.spack.gyselalibxx_env/toolchain.cmake
+          environment_command: 'source ${GITHUB_WORKSPACE}/toolchains/cpu.spack.gyselalibxx_env/environment.sh'
+      - name: Run tests
+        uses: ./.github/actions/run_tests
+        with:
+          environment_command: 'source ${GITHUB_WORKSPACE}/toolchains/cpu.spack.gyselalibxx_env/environment.sh'
