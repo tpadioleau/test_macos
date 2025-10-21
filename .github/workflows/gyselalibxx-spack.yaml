@@ -13,7 +13,7 @@ jobs:
   spack_test:
     strategy:
       matrix:
-        os: [macos-14]
+        os: [macos-15]
     runs-on: ${{ matrix.os }}
     name: Install Test
     steps:
