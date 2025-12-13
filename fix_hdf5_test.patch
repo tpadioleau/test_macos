@@ -1,0 +1,96 @@
+diff --git a/plugins/decl_hdf5/tests/decl_hdf5_test_deflate.cxx b/plugins/decl_hdf5/tests/decl_hdf5_test_deflate.cxx
+index 1d8d1722..1807f006 100644
+--- a/plugins/decl_hdf5/tests/decl_hdf5_test_deflate.cxx
++++ b/plugins/decl_hdf5/tests/decl_hdf5_test_deflate.cxx
+@@ -52,11 +52,10 @@ TEST(decl_hdf5_deflate, no_deflate)
+ 	size_t N = 1000;
+ 	PDI_expose("pb_size", &N, PDI_OUT);
+ 
+-	double** matrix_data = new double*[N];
++	double* matrix_data = new double[N * N];
+ 	for (int i = 0; i < N; i++) {
+-		matrix_data[i] = new double[N];
+ 		for (int j = 0; j < N; j++) {
+-			matrix_data[i][j] = N * i + j;
++			matrix_data[N * i + j] = N * i + j;
+ 		}
+ 	}
+ 	PDI_expose("matrix_data", matrix_data, PDI_OUT);
+@@ -64,8 +63,6 @@ TEST(decl_hdf5_deflate, no_deflate)
+ 	PDI_finalize();
+ 	PC_tree_destroy(&conf);
+ 
+-	for (int i = 0; i < N; i++)
+-		delete[] matrix_data[i];
+ 	delete[] matrix_data;
+ 
+ 	hid_t file_id, dataset_id, plist_id;
+@@ -112,11 +109,10 @@ TEST(decl_hdf5_deflate, deflate_level1)
+ 	size_t N = 1000;
+ 	PDI_expose("pb_size", &N, PDI_OUT);
+ 
+-	double** matrix_data = new double*[N];
++	double* matrix_data = new double[N * N];
+ 	for (int i = 0; i < N; i++) {
+-		matrix_data[i] = new double[N];
+ 		for (int j = 0; j < N; j++) {
+-			matrix_data[i][j] = N * i + j;
++			matrix_data[N * i + j] = N * i + j;
+ 		}
+ 	}
+ 	PDI_expose("matrix_data", matrix_data, PDI_OUT);
+@@ -124,8 +120,6 @@ TEST(decl_hdf5_deflate, deflate_level1)
+ 	PDI_finalize();
+ 	PC_tree_destroy(&conf);
+ 
+-	for (int i = 0; i < N; i++)
+-		delete[] matrix_data[i];
+ 	delete[] matrix_data;
+ 
+ 	hid_t file_id, dataset_id, plist_id;
+@@ -172,11 +166,10 @@ TEST(decl_hdf5_deflate, deflate_level2)
+ 	size_t N = 1000;
+ 	PDI_expose("pb_size", &N, PDI_OUT);
+ 
+-	double** matrix_data = new double*[N];
++	double* matrix_data = new double[N * N];
+ 	for (int i = 0; i < N; i++) {
+-		matrix_data[i] = new double[N];
+ 		for (int j = 0; j < N; j++) {
+-			matrix_data[i][j] = N * i + j;
++			matrix_data[N * i + j] = N * i + j;
+ 		}
+ 	}
+ 	PDI_expose("matrix_data", matrix_data, PDI_OUT);
+@@ -184,8 +177,6 @@ TEST(decl_hdf5_deflate, deflate_level2)
+ 	PDI_finalize();
+ 	PC_tree_destroy(&conf);
+ 
+-	for (int i = 0; i < N; i++)
+-		delete[] matrix_data[i];
+ 	delete[] matrix_data;
+ 
+ 	hid_t file_id, dataset_id, plist_id;
+@@ -232,11 +223,10 @@ TEST(decl_hdf5_deflate, deflate_level9)
+ 	size_t N = 1000;
+ 	PDI_expose("pb_size", &N, PDI_OUT);
+ 
+-	double** matrix_data = new double*[N];
++	double* matrix_data = new double[N * N];
+ 	for (int i = 0; i < N; i++) {
+-		matrix_data[i] = new double[N];
+ 		for (int j = 0; j < N; j++) {
+-			matrix_data[i][j] = N * i + j;
++			matrix_data[N * i + j] = N * i + j;
+ 		}
+ 	}
+ 	PDI_expose("matrix_data", matrix_data, PDI_OUT);
+@@ -244,8 +234,6 @@ TEST(decl_hdf5_deflate, deflate_level9)
+ 	PDI_finalize();
+ 	PC_tree_destroy(&conf);
+ 
+-	for (int i = 0; i < N; i++)
+-		delete[] matrix_data[i];
+ 	delete[] matrix_data;
+ 
+ 	hid_t file_id, dataset_id, plist_id;

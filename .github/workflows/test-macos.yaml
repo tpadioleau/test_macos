@@ -1,0 +1,79 @@
+# Copyright (C) The DDC development team, see COPYRIGHT.md file
+#
+# SPDX-License-Identifier: MIT
+
+name: Tests on macOS
+
+on:
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        required: false
+        default: false
+jobs:
+  test-macos:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-14, macos-15, macos-26]
+    runs-on: ${{matrix.os}}
+    env:
+      MAKEFLAGS: -j4
+      OMPI_MCA_rmaps_base_oversubscribe: 1
+      PRTE_MCA_rmaps_default_mapping_policy: :oversubscribe
+      CMAKE_BUILD_PARALLEL_LEVEL: 4
+      CC: clang
+      CXX: clang++
+      CMAKE_BUILD_TYPE: Debug
+    steps:
+    - run: brew install hdf5-mpi pnetcdf python3
+    - uses: actions/checkout@v6
+    - uses: actions/checkout@v6
+      with:
+        repository: pdidev/pdi
+        ref: main
+        path: pdi
+        submodules: true
+    - name: Install Python dependencies
+      run: |
+        python3 -m venv ./pdi-env
+        . ./pdi-env/bin/activate
+        python3 -m pip install setuptools pybind11 numpy mpi4py PyYAML
+    - name: Build PDI
+      run: |
+        cp fix_hdf5_test.patch pdi
+        git -C pdi apply fix_hdf5_test.patch
+        find pdi -name "FindPython3.cmake" -type f -exec rm {} \;
+        . ./pdi-env/bin/activate
+        cmake \
+          -DBUILD_BENCHMARKING=OFF \
+          -DBUILD_DECL_HDF5_PLUGIN=ON \
+          -DBUILD_DECL_NETCDF_PLUGIN=OFF \
+          -DBUILD_DEISA_PLUGIN=OFF \
+          -DBUILD_DOCUMENTATION=OFF \
+          -DBUILD_HDF5_PARALLEL=ON \
+          -DBUILD_FORTRAN=OFF \
+          -DBUILD_MPI_PLUGIN=ON \
+          -DBUILD_PYTHON=ON \
+          -DBUILD_NETCDF_PARALLEL=ON \
+          -DBUILD_PYCALL_PLUGIN=ON \
+          -DBUILD_SERIALIZE_PLUGIN=ON \
+          -DBUILD_SET_VALUE_PLUGIN=ON \
+          -DBUILD_TESTING=ON \
+          -DBUILD_TRACE_PLUGIN=ON \
+          -DBUILD_USER_CODE_PLUGIN=ON \
+          -DUSE_HDF5=SYSTEM \
+          -DUSE_NetCDF=SYSTEM \
+          -DUSE_pybind11=SYSTEM \
+          -DCMAKE_CXX_FLAGS="-undefined dynamic_lookup -fsanitize=undefined -fno-omit-frame-pointer -Wno-deprecated-declarations -Wno-unqualified-std-cast-call" \
+          -DCMAKE_CXX_STANDARD=17 \
+          -DPython3_ROOT_DIR=/opt/homebrew/opt/python/Frameworks/Python.framework/Versions/Current/ \
+          -B pdi/build \
+          -S pdi
+        cmake --build pdi/build
+        ctest --test-dir pdi/build --output-on-failure
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+      if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
