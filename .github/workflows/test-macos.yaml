@@ -40,7 +40,7 @@ jobs:
     - name: Build PDI
       run: |
         cp *.patch pdi
-        git -C pdi apply fix-cmake_build_type.patch fix-hdf5-test.patch
+        git -C pdi apply fix-cmake_build_type.patch
         find pdi -name "FindPython3.cmake" -type f -exec rm {} \;
         export LDFLAGS="-undefined dynamic_lookup"
         cmake \
@@ -62,7 +62,7 @@ jobs:
           -DBUILD_USER_CODE_PLUGIN=ON \
           -DUSE_HDF5=SYSTEM \
           -DUSE_NetCDF=SYSTEM \
-          -DCMAKE_CXX_FLAGS="-fsanitize=undefined -fno-omit-frame-pointer -Wno-deprecated-declarations -Wno-unqualified-std-cast-call" \
+          -DCMAKE_CXX_FLAGS="-Wno-deprecated-declarations -Wno-unqualified-std-cast-call" \
           -DCMAKE_CXX_STANDARD=17 \
           -DPython3_ROOT_DIR=/opt/homebrew/opt/python/Frameworks/Python.framework/Versions/Current \
           -B pdi/build \
