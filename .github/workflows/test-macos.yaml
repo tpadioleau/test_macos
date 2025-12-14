@@ -28,7 +28,8 @@ jobs:
       CXX: clang++
       CMAKE_BUILD_TYPE: Debug
     steps:
-    - run: brew install hdf5-mpi pnetcdf python3
+    - run: brew install hdf5-mpi pnetcdf python3 python-setuptools pybind11 numpy mpi4py
+    - run: python3 -m pip install --break-system-packages pyyaml
     - uses: actions/checkout@v6
     - uses: actions/checkout@v6
       with:
@@ -36,17 +37,12 @@ jobs:
         ref: main
         path: pdi
         submodules: true
-    - name: Install Python dependencies
-      run: |
-        python3 -m venv ./pdi-env
-        . ./pdi-env/bin/activate
-        python3 -m pip install setuptools pybind11 numpy mpi4py PyYAML
     - name: Build PDI
       run: |
-        cp fix_hdf5_test.patch pdi
-        git -C pdi apply fix_hdf5_test.patch
+        cp *.patch pdi
+        git -C pdi apply fix-cmake_build_type.patch fix-hdf5-test.patch
         find pdi -name "FindPython3.cmake" -type f -exec rm {} \;
-        . ./pdi-env/bin/activate
+        export LDFLAGS="-undefined dynamic_lookup"
         cmake \
           -DBUILD_BENCHMARKING=OFF \
           -DBUILD_DECL_HDF5_PLUGIN=ON \
@@ -66,10 +62,9 @@ jobs:
           -DBUILD_USER_CODE_PLUGIN=ON \
           -DUSE_HDF5=SYSTEM \
           -DUSE_NetCDF=SYSTEM \
-          -DUSE_pybind11=SYSTEM \
-          -DCMAKE_CXX_FLAGS="-undefined dynamic_lookup -fsanitize=undefined -fno-omit-frame-pointer -Wno-deprecated-declarations -Wno-unqualified-std-cast-call" \
+          -DCMAKE_CXX_FLAGS="-fsanitize=undefined -fno-omit-frame-pointer -Wno-deprecated-declarations -Wno-unqualified-std-cast-call" \
           -DCMAKE_CXX_STANDARD=17 \
-          -DPython3_ROOT_DIR=/opt/homebrew/opt/python/Frameworks/Python.framework/Versions/Current/ \
+          -DPython3_ROOT_DIR=/opt/homebrew/opt/python/Frameworks/Python.framework/Versions/Current \
           -B pdi/build \
           -S pdi
         cmake --build pdi/build
